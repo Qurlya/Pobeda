@@ -1,17 +1,35 @@
 import pandas as pd
 
 class Graph:
-    def __init__(self, vertices):
-        self.V = vertices
-        self.graph = [[0 for _ in range(vertices)] for _ in range(vertices)]
+    def __init__(self, graph):
+        self.graph = graph
+        self.V = len(graph)
         self.edges = 0
-        for i in range(vertices):
-            self.graph[i][i] = 0
+
+        for row in range(len(self.graph)):
+            for col in range(row, len(self.graph[row])):
+                    if self.graph[row][col] != 0:
+                        self.edges+=1
+
 
     def add_edge(self, u, v, w):
         self.edges += 1
         self.graph[u-1][v-1] = w
         self.graph[v-1][u-1] = w
+
+    def add_vertices(self):
+        new_graph = self.graph
+        for row in range(self.V):
+            new_graph[row].append(0)
+
+        self.V += 1
+        new_graph.append([0 for _ in range(self.V)])
+        self.graph = new_graph
+
+    def add_node(self, u, v, w):
+        self.edges += 1
+        self.graph[u - 1][v - 1] = w
+        self.graph[v - 1][u - 1] = w
 
     def display(self):
         vertices = [f'v{i}' for i in range(1, self.V+1)]
@@ -21,7 +39,7 @@ class Graph:
         print(df)
 
     """Матрица инцидентности"""
-    def toIncidence_matrix(self):
+    def to_incidence_matrix(self):
         edge = 0
         incidence_matrix = [[0 for _ in range(self.edges)] for _ in range(self.V)]
         for row in range(len(self.graph)):
@@ -39,7 +57,7 @@ class Graph:
         print(df)
 
     """Матрица степеней"""
-    def toDegrees_matrix(self):
+    def to_degrees_matrix(self):
         degrees_matrix = [[0 for _ in range(self.V)] for _ in range(self.V)]
         for row in range(self.V):
             degrees_matrix[row][row] = sum(self.graph[row])
@@ -51,7 +69,7 @@ class Graph:
         print(df)
 
     """Матрица достижимости"""
-    def toReachability_matrix(self):
+    def to_reachability_matrix(self):
         reachability_matrix = [[0 for _ in range(self.V)] for _ in range(self.V)]
         for row in range(len(self.graph)):
             for col in range(row, len(self.graph[row])):
@@ -85,22 +103,96 @@ class Graph:
         print("\nМатрица расстояний:")
         print(df)
 
+    """Матрица Кирхгофа"""
+    def to_kirchhoff_matrix(self):
+        kirchhoff_matrix = [[0 for _ in range(self.V)] for _ in range(self.V)]
+        for row in range(self.V):
+            for col in range(self.V):
+                kirchhoff_matrix[row][col] = self.graph[row][col] * (-1)
+            kirchhoff_matrix[row][row] = sum(self.graph[row])
+
+        vertices = [f'v{i}' for i in range(1, self.V + 1)]
+        df = pd.DataFrame(kirchhoff_matrix, index=vertices, columns=vertices)
+
+        print("\nМатрица Кирхгофа:")
+        print(df)
+
+    def to_ring_sum_matrix(self, add_graph):
+        ring_sum_matrix = [[0 for _ in range(max(self.V, len(add_graph)))] for _ in range(max(self.V, len(add_graph)))]
+        for row in range(self.V):
+            for col in range(self.V):
+                if max(row, col) <= len(add_graph)-1:
+                    ring_sum_matrix[row][col] = self.graph if self.graph[row][col] == add_graph[row][col] == 0 else 0
+                else:
+                    ring_sum_matrix[row][col] = add_graph[row][col]
+
+        vertices = [f'v{i}' for i in range(1, len(ring_sum_matrix) + 1)]
+        df = pd.DataFrame(ring_sum_matrix, index=vertices, columns=vertices)
+        print("\nКольцевая сумма графов:")
+        print(df)
 
 if __name__ == "__main__":
-    g = Graph(7)
-    g.add_edge(1, 2, 3)
-    g.add_edge(1, 3, 5)
-    g.add_edge(2, 3, 4)
-    g.add_edge(4, 6, 1)
-    g.add_edge(4, 5, 2)
-    g.add_edge(5, 6, 3)
+    g1 = Graph([
+        [0, 3, 5, 0, 0, 0, 0],
+        [3, 0, 4, 0, 0, 0, 0],
+        [5, 4, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 2, 1, 0],
+        [0, 0, 0, 2, 0, 3, 0],
+        [0, 0, 0, 1, 3, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+               ])
 
-    g.display()
+    g1.display()
 
-    g.toIncidence_matrix()
+    g1.to_incidence_matrix()
 
-    g.toDegrees_matrix()
+    g1.to_degrees_matrix()
 
-    g.toReachability_matrix()
+    g1.to_reachability_matrix()
 
-    g.floyd_warshall()
+    g1.floyd_warshall()
+
+    g1.to_kirchhoff_matrix()
+
+    g2 = Graph([
+        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+        [1, 1, 0, 1, 1, 1, 0, 0, 1, 0],
+        [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 1, 0, 0, 0, 1, 0, 1],
+        [0, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ])
+
+    g2.add_vertices()
+
+    g2.display()
+
+    g2.add_node(8, 1, 10)
+
+    g3 = Graph([
+        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+        [1, 1, 0, 1, 1, 1, 0, 0, 1, 0],
+        [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 1, 0, 0, 0, 1, 0, 1],
+        [0, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+    ])
+
+    g3.to_ring_sum_matrix(add_graph=[
+    [0, 1, 1, 0, 1, 0],
+    [1, 0, 1, 1, 0, 1],
+    [1, 1, 0, 1, 1, 0],
+    [0, 1, 1, 0, 1, 1],
+    [1, 0, 1, 1, 0, 1],
+    [0, 1, 0, 1, 1, 0]
+])
+
+
