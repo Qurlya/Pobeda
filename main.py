@@ -31,7 +31,8 @@ class Graph:
         self.graph[u - 1][v - 1] = w
         self.graph[v - 1][u - 1] = w
 
-    def display(self):
+    """матрица смежности"""
+    def to_adjacency_matrix(self):
         vertices = [f'v{i}' for i in range(1, self.V+1)]
         df = pd.DataFrame(self.graph, index=vertices, columns=vertices)
 
@@ -50,7 +51,7 @@ class Graph:
                         edge+=1
 
         vertices = [f'v{i}' for i in range(1, self.V+1)]
-        edge = ['e1' for _ in range(1, self.edges+1)]
+        edge = [f'e{i}' for i in range(1, self.edges+1)]
         df = pd.DataFrame(incidence_matrix, index=vertices, columns=edge)
 
         print("\nМатрица инцидентности:")
@@ -77,8 +78,6 @@ class Graph:
                     reachability_matrix[row][col] = 1
                     reachability_matrix[col][row] = 1
             reachability_matrix[row][row] = 1
-
-
 
         vertices = [f'v{i}' for i in range(1, self.V + 1)]
         df = pd.DataFrame(reachability_matrix, index=vertices, columns=vertices)
@@ -118,15 +117,19 @@ class Graph:
         print(df)
 
     def to_ring_sum_matrix(self, add_graph):
-        ring_sum_matrix = [[0 for _ in range(max(self.V, len(add_graph)))] for _ in range(max(self.V, len(add_graph)))]
-        for row in range(self.V):
-            for col in range(self.V):
-                if max(row, col) <= len(add_graph)-1:
-                    ring_sum_matrix[row][col] = self.graph if self.graph[row][col] == add_graph[row][col] == 0 else 0
-                else:
-                    ring_sum_matrix[row][col] = add_graph[row][col]
+        size = max(self.V, len(add_graph))
+        ring_sum_matrix = [[0] * size for _ in range(size)]
 
-        vertices = [f'v{i}' for i in range(1, len(ring_sum_matrix) + 1)]
+        for i in range(self.V):
+            for j in range(self.V):
+                ring_sum_matrix[i][j] = self.graph[i][j]
+
+        overlap = min(self.V, len(add_graph))
+        for i in range(overlap):
+            for j in range(overlap):
+                ring_sum_matrix[i][j] ^= add_graph[i][j]
+
+        vertices = [f'v{i + 1}' for i in range(size)]
         df = pd.DataFrame(ring_sum_matrix, index=vertices, columns=vertices)
         print("\nКольцевая сумма графов:")
         print(df)
@@ -142,7 +145,7 @@ if __name__ == "__main__":
         [0, 0, 0, 0, 0, 0, 0],
                ])
 
-    g1.display()
+    g1.to_adjacency_matrix()
 
     g1.to_incidence_matrix()
 
@@ -169,9 +172,11 @@ if __name__ == "__main__":
 
     g2.add_vertices()
 
-    g2.display()
+    g2.to_adjacency_matrix()
 
     g2.add_node(8, 1, 10)
+
+    g2.to_adjacency_matrix()
 
     g3 = Graph([
         [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
