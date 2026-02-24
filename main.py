@@ -33,7 +33,7 @@ class Graph:
 
     """матрица смежности"""
     def to_adjacency_matrix(self):
-        vertices = [f'v{i}' for i in range(1, self.V+1)]
+        vertices = [f'' for i in range(1, self.V+1)]
         df = pd.DataFrame(self.graph, index=vertices, columns=vertices)
 
         print("\nМатрица смежности:")
